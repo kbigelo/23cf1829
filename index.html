@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Bigelow Case — Flowchart</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -33,17 +33,12 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   RESET — overflow hidden so we control all scroll/pan
+   RESET
 ══════════════════════════════════════════════════════════════════ */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html, body {
   width:100%; height:100%;
   overflow:hidden;
-  /* promote body to compositor layer */
-  transform:translateZ(0);
-  -webkit-transform:translateZ(0);
-}
-body {
   background:var(--bg);
   color:var(--text);
   font-family:'DM Sans',sans-serif;
@@ -51,37 +46,52 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   FIXED CHROME  (header + legend — always on top)
+   FIXED CHROME
 ══════════════════════════════════════════════════════════════════ */
 #shell {
   position:fixed;
   top:0; left:0; right:0;
   z-index:200;
-  will-change:transform;
-  transform:translateZ(0);
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
+  padding-top:env(safe-area-inset-top);
+  background:var(--bg2);
 }
 
 header {
-  background:var(--bg2);
   border-bottom:1px solid var(--border);
-  padding:11px 20px;
+  padding:10px 20px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
+  gap:16px;
 }
+.hdr-content { flex:1; min-width:0; }
 .hdr-title {
   font-family:'Playfair Display',serif;
   font-size:15px;font-weight:600;
   color:var(--text);letter-spacing:.02em;
+  white-space:normal; line-height:1.2;
 }
 .hdr-sub {
   font-family:'DM Mono',monospace;
   font-size:10px;color:var(--text-dim);
-  letter-spacing:.08em;text-transform:uppercase;margin-top:2px;
+  letter-spacing:.08em;text-transform:uppercase;margin-top:4px;
+  white-space:normal; line-height:1.3;
 }
+
+/* Toggle Header Button */
+.btn-collapse {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--text);
+  padding:6px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s ease;
+}
+.btn-collapse:hover { background:var(--green-dim); border-color:var(--green); }
+.btn-collapse svg { transition:transform 0.3s ease; }
+
 .badges { display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0; }
 .badge {
   font-family:'DM Mono',monospace;font-size:9px;
@@ -96,8 +106,10 @@ header {
 .legend {
   background:var(--bg2);
   border-bottom:1px solid var(--border);
-  padding:7px 20px;
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:8px 20px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
 }
 .lg-label {
   font-family:'DM Mono',monospace;font-size:9px;
@@ -109,147 +121,118 @@ header {
   color:var(--text-dim);letter-spacing:.04em;
 }
 .lg-dot { width:9px;height:9px;border-radius:2px;flex-shrink:0; }
+.lg-sep { width:1px; height:14px; background:var(--border); margin:0 4px; }
+
+/* Collapsed state */
+#shell.collapsed .legend { display:none; }
+#shell.collapsed .btn-collapse svg { transform:rotate(180deg); }
 
 /* ══════════════════════════════════════════════════════════════════
-   ZOOM WIDGET  — fixed top-right, sits just below shell
+   ZOOM WIDGET
 ══════════════════════════════════════════════════════════════════ */
 #zoom-widget {
   position:fixed;
   right:16px;
-  /* top offset set by JS after shell measured */
   z-index:300;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:4px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
   padding:9px 7px;
   background:var(--bg2);
-  border:1px solid var(--border);
-  border-top:none;
+  border:1px solid var(--border); border-top:none;
   border-radius:0 0 var(--radius) var(--radius);
   box-shadow:0 6px 24px rgba(0,0,0,.55);
-  /* GPU layer */
-  will-change:transform;
-  transform:translateZ(0);
-  backface-visibility:hidden;
 }
 .zb {
   width:30px;height:30px;
-  background:var(--bg3);
-  border:1px solid var(--border);
-  border-radius:4px;
-  color:var(--text);
-  font-size:15px;line-height:1;
-  cursor:pointer;
+  background:var(--bg3); border:1px solid var(--border); border-radius:4px;
+  color:var(--text); font-size:15px;line-height:1; cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;
+  -webkit-tap-highlight-color:transparent; user-select:none;
   transition:background .1s,border-color .1s;
-  backface-visibility:hidden;
 }
 .zb:hover { background:var(--green-dim);border-color:var(--green); }
-.zb:active { transform:scale(.9) translateZ(0); }
+.zb:active { transform:scale(.9); }
 .z-level {
-  font-family:'DM Mono',monospace;
-  font-size:10px;color:var(--text-dim);
-  letter-spacing:.05em;
-  padding:2px 0;min-width:34px;text-align:center;
+  font-family:'DM Mono',monospace; font-size:10px;color:var(--text-dim);
+  letter-spacing:.05em; padding:2px 0;min-width:34px;text-align:center;
 }
 .z-sep { width:22px;height:1px;background:var(--border);margin:2px 0; }
 
 /* ══════════════════════════════════════════════════════════════════
-   PAN / ZOOM VIEWPORT
+   PAN / ZOOM VIEWPORT (Removed hardware acceleration to fix blur)
 ══════════════════════════════════════════════════════════════════ */
 #viewport {
-  position:fixed;
-  left:0; right:0;
-  /* top/height set by JS */
-  overflow:hidden;
-  cursor:grab;
-  touch-action:none;
-  -webkit-user-select:none;
-  user-select:none;
-  /* isolate stacking/paint */
+  position:fixed; left:0; right:0;
+  overflow:hidden; cursor:grab; touch-action:none;
+  -webkit-user-select:none; user-select:none;
   contain:strict;
-  will-change:contents;
 }
 #viewport.grabbing { cursor:grabbing; }
 
 #canvas {
-  position:absolute;
-  top:0; left:0;
+  position:absolute; top:0; left:0;
   transform-origin:0 0;
-  /* persistent GPU compositor layer */
-  will-change:transform;
-  transform:translate3d(0,0,0);
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
-  /* block layout recalc from children */
   contain:layout;
+  /* explicitly removed will-change and translate3d to force sharp vector scaling */
 }
 
-.mermaid {
-  display:inline-block;
-  padding:40px;
-}
+.mermaid { display:inline-block; padding:40px; }
 .mermaid svg {
-  display:block;
-  max-width:none !important;
-  /* crisp vector rendering */
-  shape-rendering:geometricPrecision;
-  text-rendering:optimizeLegibility;
-  /* hint GPU for large SVG */
-  will-change:transform;
+  display:block; max-width:none !important;
+  shape-rendering:geometricPrecision; text-rendering:optimizeLegibility;
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   MEDIA TOOLTIP  — positioned via CSS custom props (no top/left thrash)
+   MEDIA TOOLTIP
 ══════════════════════════════════════════════════════════════════ */
 #media-tooltip {
-  position:fixed;
-  z-index:9999;
-  pointer-events:none;
-  max-width:340px;min-width:200px;
-  /* GPU composited: animate ONLY transform + opacity */
-  will-change:transform,opacity;
+  position:fixed; z-index:9999; pointer-events:none;
+  max-width:340px; min-width:200px;
   opacity:0;
-  transform:translate3d(var(--ttx,-9999px),var(--tty,-9999px),0) scale(.96);
+  transform:translate(var(--ttx,-9999px),var(--tty,-9999px)) scale(.96);
   transition:opacity .14s ease, transform .14s ease;
-  backface-visibility:hidden;
 }
 #media-tooltip.vis {
-  opacity:1;
-  transform:translate3d(var(--ttx,0px),var(--tty,0px),0) scale(1);
-  pointer-events:auto;
+  opacity:1; pointer-events:auto;
+  transform:translate(var(--ttx,0px),var(--tty,0px)) scale(1);
 }
 .tt-inner {
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-radius:6px;
-  overflow:hidden;
-  box-shadow:0 8px 32px rgba(0,0,0,.72),0 1px 4px rgba(0,0,0,.4),
-             inset 0 0 0 1px rgba(255,255,255,.03);
+  background:var(--bg2); border:1px solid var(--border); border-radius:6px;
+  overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.72),0 1px 4px rgba(0,0,0,.4);
 }
-.tt-media {
-  width:100%;display:block;
-  background:#000;
-  max-height:220px;object-fit:contain;
-}
-video.tt-media { max-height:200px;object-fit:contain;background:#000; }
+.tt-media { width:100%; display:block; background:#000; max-height:220px; object-fit:contain; }
 .tt-cap {
-  padding:10px 14px;
-  font-family:'DM Mono',monospace;
-  font-size:11px;color:var(--text-dim);
-  line-height:1.5;
-  border-top:1px solid var(--border);
+  padding:10px 14px; font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--text-dim); line-height:1.5; border-top:1px solid var(--border);
 }
-.tt-id {
-  font-size:9px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--green-light);margin-bottom:4px;opacity:.65;
-}
-.tt-empty {
-  padding:14px;font-family:'DM Mono',monospace;
-  font-size:11px;color:var(--text-dim);opacity:.4;text-align:center;
+.tt-id { font-size:9px;letter-spacing:.1em;text-transform:uppercase; color:var(--green-light);margin-bottom:4px;opacity:.65; }
+.tt-empty { padding:14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim);opacity:.4;text-align:center; }
+.tt-hint-mobile { display:none; font-size:9px; color:var(--text-dim); opacity:0.6; margin-top:8px; text-align:center; font-style:italic; }
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE
+══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  header { padding:8px 12px; }
+  .hdr-title { font-size:13px; }
+  .hdr-sub { font-size:9px; }
+  .btn-collapse { padding:5px; }
+  .legend { padding:8px 12px; gap:8px; justify-content:center; }
+  .lg-item { font-size:8px; }
+  .lg-label, .lg-sep { display:none; }
+  .badges { width:100%; justify-content:center; margin-bottom:4px; }
+  
+  #zoom-widget { right:8px; padding:6px 5px; }
+  .zb { width:26px; height:26px; font-size:13px; }
+  .z-level { min-width:30px; font-size:9px; }
+
+  /* Tooltip docks to the bottom safely on mobile */
+  #media-tooltip.vis {
+    transform:translate(-50%, 0) scale(1) !important;
+    top:auto !important; bottom:20px !important; left:50% !important;
+    width:calc(100vw - 32px) !important; max-width:360px !important;
+  }
+  .tt-hint-mobile { display:block; }
+  .tt-inner { box-shadow:0 12px 40px rgba(0,0,0,0.85), 0 1px 8px rgba(0,0,0,0.6); }
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -260,9 +243,7 @@ video.tt-media { max-height:200px;object-fit:contain;background:#000; }
   font-family:'DM Mono',monospace;font-size:9px;
   color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;
   background:var(--bg2);border:1px solid var(--border);
-  border-radius:3px;padding:5px 9px;opacity:.5;
-  pointer-events:none;
-  will-change:opacity;
+  border-radius:3px;padding:5px 9px;opacity:.6; pointer-events:none;
   transition:opacity 1.2s ease;
 }
 #hint.gone { opacity:0; }
@@ -270,95 +251,60 @@ video.tt-media { max-height:200px;object-fit:contain;background:#000; }
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     MEDIA DATA — hardcode evidence links here
-     Format: "NODE_ID": { type:"image"|"video", url:"...", caption:"..." }
-════════════════════════════════════════════════════════════════════ -->
+<!-- MEDIA DATA -->
 <script>
 const mediaData = {
-  // ── INCIDENT ────────────────────────────────────────────────────
-  "INC3": { type:"image", url:"https://github.com/kbigelo/23cf1829/blob/main/frame_00000725.png?raw=true",
-            caption:"3 bullet holes — garage ceiling + windshield" },
-  "INC5": { type:"video", url:"https://example.com/video/acoustic.mp4",
-            caption:"Acoustic impossibility — expert analysis" },
-
-  // ── DISPATCH ────────────────────────────────────────────────────
-  // "D1":   { type:"image", url:"https://example.com/docs/dispatch-record.png",
-  //           caption:"Actual dispatch record — 8:22 AM call received" },
-  // "D2":   { type:"image", url:"https://example.com/docs/wacker-affidavit-p1.png",
-  //           caption:"Wacker Affidavit Para 1 — '0730 AM dispatch' claim" },
-
-  // ── CONTACT ─────────────────────────────────────────────────────
-  "C3":   { type:"video", url:"https://example.com/video/bodycam-010050.mp4",
-            caption:"Staat approaches — 01:00:50, left hand concealed" },
-  "C5":   { type:"video", url:"https://example.com/video/bodycam-patdown.mp4",
-            caption:"Unlawful pat-down — 01:00:55–01:01:05" },
-  "C8":   { type:"video", url:"https://example.com/video/bodycam-holster.mp4",
-            caption:"Staat hand to holster — 01:01:25" },
-  "C10":  { type:"video", url:"https://example.com/video/bodycam-consent.mp4",
-            caption:"Coerced consent — 01:01:54" },
-
-  // ── SEARCH ──────────────────────────────────────────────────────
-  "SV1":  { type:"video", url:"https://example.com/video/bodycam-phone.mp4",
-            caption:"Phone moved after prohibition — 01:03:26" },
-  "SV5":  { type:"video", url:"https://example.com/video/bodycam-bag.mp4",
-            caption:"Sealed rifle bag unzipped — 01:06:46–01:06:50" },
-  "CI3":  { type:"video", url:"https://example.com/video/bodycam-attorney.mp4",
-            caption:"Panas interrupts attorney call — 01:11:49" },
-
-  // ── FORENSICS ───────────────────────────────────────────────────
-  // "FS_TRUTH":  { type:"image", url:"https://example.com/images/ar15-selector.png",
-  //               caption:"AR-15 selector mechanics — safe storage diagram" },
-  // "FT_METHOD": { type:"image", url:"https://example.com/images/trajectory-wire.jpg",
-  //               caption:"LaFleur flexible yard-flag wire trajectory method" },
-
-  // ── PERJURY ─────────────────────────────────────────────────────
-  "PS1":  { type:"video", url:"https://example.com/video/bodycam-010206.mp4",
-            caption:"Staat: 'Maintenance might have given us the wrong one' — 01:02:06" },
-  "PS2":  { type:"video", url:"https://example.com/video/bodycam-phone-touch.mp4",
-            caption:"Staat touches phone — 01:03:26" },
-
-  // ── WARRANTS ────────────────────────────────────────────────────
-  // "PW_BRADY": { type:"image", url:"https://example.com/docs/phone-extract-log.png",
-  //              caption:"Forensic extraction log — cell phone video present 14 months" },
+  "INC3": { type:"image", url:"https://github.com/kbigelo/23cf1829/blob/main/frame_00000725.png?raw=true", caption:"3 bullet holes — garage ceiling + windshield" },
+  "INC5": { type:"video", url:"https://example.com/video/acoustic.mp4", caption:"Acoustic impossibility — expert analysis" },
+  "C3":   { type:"video", url:"https://example.com/video/bodycam-010050.mp4", caption:"Staat approaches — 01:00:50, left hand concealed" },
+  "C5":   { type:"video", url:"https://example.com/video/bodycam-patdown.mp4", caption:"Unlawful pat-down — 01:00:55–01:01:05" },
+  "C8":   { type:"video", url:"https://example.com/video/bodycam-holster.mp4", caption:"Staat hand to holster — 01:01:25" },
+  "C10":  { type:"video", url:"https://example.com/video/bodycam-consent.mp4", caption:"Coerced consent — 01:01:54" },
+  "SV1":  { type:"video", url:"https://example.com/video/bodycam-phone.mp4", caption:"Phone moved after prohibition — 01:03:26" },
+  "SV5":  { type:"video", url:"https://example.com/video/bodycam-bag.mp4", caption:"Sealed rifle bag unzipped — 01:06:46–01:06:50" },
+  "CI3":  { type:"video", url:"https://example.com/video/bodycam-attorney.mp4", caption:"Panas interrupts attorney call — 01:11:49" },
+  "PS1":  { type:"video", url:"https://example.com/video/bodycam-010206.mp4", caption:"Staat: 'Maintenance might have given us the wrong one' — 01:02:06" },
+  "PS2":  { type:"video", url:"https://example.com/video/bodycam-phone-touch.mp4", caption:"Staat touches phone — 01:03:26" }
 };
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     CHROME SHELL
-════════════════════════════════════════════════════════════════════ -->
+<!-- CHROME SHELL -->
 <div id="shell">
   <header>
-    <div>
+    <div class="hdr-content">
       <div class="hdr-title">State v. Bigelow — Constitutional Violations Map</div>
       <div class="hdr-sub">Suppression Analysis · Franks v. Delaware · Wong Sun Chain</div>
     </div>
+    <button id="btn-collapse" class="btn-collapse" aria-label="Toggle Header">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+  </header>
+  <div class="legend" id="legend">
     <div class="badges">
       <span class="badge b-red">Violation</span>
       <span class="badge b-green">Event / Remedy</span>
       <span class="badge b-yellow">Perjury</span>
       <span class="badge b-orange">Judicial / Warn</span>
     </div>
-  </header>
-  <div class="legend">
+    <div class="lg-sep"></div>
     <span class="lg-label">Key —</span>
     <div class="lg-item"><div class="lg-dot" style="background:#81322d"></div>4th/5th/6th Amend. Violation</div>
     <div class="lg-item"><div class="lg-dot" style="background:#3a4543"></div>Event / Remedy</div>
     <div class="lg-item"><div class="lg-dot" style="background:#ffe452;border-radius:50%"></div>Perjury</div>
     <div class="lg-item"><div class="lg-dot" style="background:#ff5025;border-radius:50%"></div>Judicial / Warning</div>
     <div class="lg-item"><div class="lg-dot" style="background:#5c201c"></div>Critical / Terminal</div>
-    <div class="lg-item" style="margin-left:auto">
+    <div class="lg-item" style="margin-left:auto; font-weight:500;">
       <div class="lg-dot" style="background:var(--yellow);border-radius:50%;box-shadow:0 0 5px var(--yellow)"></div>
-      Glowing nodes have attached media — hover to preview
+      Glowing nodes have attached media
     </div>
   </div>
 </div>
 
 <!-- ZOOM WIDGET -->
 <div id="zoom-widget">
-  <button class="zb" id="btn-in"  title="Zoom in (+ or scroll up)">+</button>
+  <button class="zb" id="btn-in"  title="Zoom in (+)">+</button>
   <div class="z-level" id="z-label">100%</div>
-  <button class="zb" id="btn-out" title="Zoom out (- or scroll down)">−</button>
+  <button class="zb" id="btn-out" title="Zoom out (−)">−</button>
   <div class="z-sep"></div>
   <button class="zb" id="btn-fit" title="Fit to screen" style="font-size:13px">⊡</button>
 </div>
@@ -378,9 +324,6 @@ flowchart TB
     classDef franks    fill:#81322d,stroke:#9e3e38,color:#f5d0ce
     classDef warn      fill:#1e0d00,stroke:#ff5025,color:#ff8a6a,font-weight:bold
 
-    %% ═══════════════════════════════════════
-    %% LANE 0 — ROOT INCIDENT
-    %% ═══════════════════════════════════════
     subgraph INCIDENT["📍 INCIDENT — Oct 30–31, 2023"]
         direction TB
         INC1["Alleged shots fired\nfrom Unit 203\nOct 30 evening"]
@@ -394,9 +337,6 @@ flowchart TB
         INC3-->INC6
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 1 — DISPATCH & AFFIDAVIT FRAUD
-    %% ═══════════════════════════════════════
     subgraph DISPATCH["📡 DISPATCH RECORD vs. AFFIDAVIT"]
         direction LR
         D1["ACTUAL DISPATCH\n8:22 AM — call received\n8:26 AM — dispatched\n8:33 AM — arrival\nEvent: SUSP, Priority 2"]
@@ -405,9 +345,6 @@ flowchart TB
         D1 -->|"Contradicts"| D2-->D3
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 2 — INITIAL CONTACT
-    %% ═══════════════════════════════════════
     subgraph CONTACT["🚔 INITIAL POLICE CONTACT — 9:28 AM"]
         direction TB
         C1["Deputies emerge from\ntactical concealment\nbehind parked vehicles"]
@@ -424,9 +361,6 @@ flowchart TB
         C1-->C2-->C3-->C4-->C5-->C6-->C7-->C8-->C9-->C10-->C11
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 3 — CONSENT SEARCH
-    %% ═══════════════════════════════════════
     subgraph SEARCH["🔍 CONSENT SEARCH — 9:28 AM to 12:27 PM"]
         direction TB
         subgraph SCOPE["Scope Violations — Arizona v. Hicks"]
@@ -486,9 +420,6 @@ flowchart TB
         COUNSEL_INVOKE-->COMMANDEER
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 4 — ARREST & DETENTION
-    %% ═══════════════════════════════════════
     subgraph ARREST["⛓ ARREST & CUSTODIAL DETENTION — 12:27 PM"]
         direction TB
         subgraph PC_ANALYSIS["Probable Cause at 12:27 PM"]
@@ -532,9 +463,6 @@ flowchart TB
         DETENTION-->PSYCH_WEAPON
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 5 — INTERROGATION
-    %% ═══════════════════════════════════════
     subgraph INTERROGATION["🎙 INTERROGATION SEQUENCE"]
         direction TB
         subgraph PRE_MIRANDA["Pre-Miranda Home Interrogation"]
@@ -568,9 +496,6 @@ flowchart TB
         SEIBERT_SEQ-->STATION_INT
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 6 — WARRANT DEFECTS
-    %% ═══════════════════════════════════════
     subgraph WARRANTS["📋 WARRANT AFFIDAVIT ANALYSIS — Franks v. Delaware"]
         direction TB
         subgraph HOME_W["Home Search Warrant — Franks Matrix"]
@@ -613,9 +538,6 @@ flowchart TB
         end
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 7 — FORENSIC FAILURES
-    %% ═══════════════════════════════════════
     subgraph FORENSICS["🔬 FORENSIC INTEGRITY — Daubert Matrix"]
         direction LR
         subgraph F_SELECTOR["AR-15 Selector Switch"]
@@ -644,9 +566,6 @@ flowchart TB
         end
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 8 — PERJURY MATRIX
-    %% ═══════════════════════════════════════
     subgraph PERJURY["⚠ DOCUMENTED PERJURY — Video vs. Testimony"]
         direction LR
         subgraph PJ_STAAT["Deputy Staat — 4 False Statements"]
@@ -674,9 +593,6 @@ flowchart TB
         end
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 9 — JUDICIAL MISCONDUCT
-    %% ═══════════════════════════════════════
     subgraph JUDICIAL["⚖ JUDICIAL MISCONDUCT — Hon. J. Arthur Melvin III"]
         direction LR
         subgraph JM_FRANKS["Franks Framework Abandoned"]
@@ -722,9 +638,6 @@ flowchart TB
         end
     end
 
-    %% ═══════════════════════════════════════
-    %% LANE 10 — SUPPRESSION CASCADE
-    %% ═══════════════════════════════════════
     subgraph SUPPRESS_CHAIN["⚡ SUPPRESSION CASCADE — Wong Sun Chain"]
         direction TB
         SUP1["SUPPRESS:\nCoerced consent\n+ unlawful pat-down\nSchneckloth + Terry"]
@@ -744,12 +657,8 @@ flowchart TB
         SUP8-->RESULT
     end
 
-    %% ═══════════════════════════════════════════════════════════
-    %% LANE 11 — REMEDIES  (vertical TB lanes, not horizontal LR)
-    %% ═══════════════════════════════════════════════════════════
     subgraph REMEDIES["📌 REMEDIES & FORWARD STRATEGY"]
         direction TB
-
         subgraph IMMEDIATE["🗂 Immediate Motions"]
             direction TB
             IM1["Motion for Reconsideration:\n• Correct cartridge factual error\n• Para 7 fruit argument\n• Dispatch fraud (52-min)\n• Google Street View error\n• Franks not conducted\n• Prompted voluntariness"]
@@ -791,9 +700,6 @@ flowchart TB
         APPELLATE-->CIVIL
     end
 
-    %% ═══════════════════════════════════════
-    %% MAIN FLOW CONNECTIONS
-    %% ═══════════════════════════════════════
     INCIDENT-->DISPATCH
     DISPATCH-->CONTACT
     INCIDENT-->CONTACT
@@ -812,7 +718,6 @@ flowchart TB
     SEARCH-->SUPPRESS_CHAIN
     SUPPRESS_CHAIN-->REMEDIES
 
-    %% ── Class assignments ──
     class INC5,INC6,C5,C8,C10,SV5,N4,RD4,CI3,CI5,CM4,CM5 violation
     class PA3,DT3,DT4,DT5,CP4,PW5,PW_VIOL,PW_BRADY2,PW_MISREP violation
     class SS5,SI3,SI5,FS_VIOL,FG_VIOL,FT_VIOL,FD_REMEDY violation
@@ -839,7 +744,6 @@ flowchart TB
      ENGINE
 ══════════════════════════════════════════════════════════════════ -->
 <script>
-/* ─── Mermaid ────────────────────────────────────────────────────── */
 mermaid.initialize({
   startOnLoad: true,
   theme: 'base',
@@ -859,16 +763,9 @@ mermaid.initialize({
     fontFamily:           "'DM Mono',monospace",
     fontSize:             '12px',
   },
-  flowchart: {
-    curve:       'basis',
-    htmlLabels:  false,
-    padding:     20,
-    nodeSpacing: 44,
-    rankSpacing: 52,
-  }
+  flowchart: { curve: 'basis', htmlLabels: false, padding: 20, nodeSpacing: 44, rankSpacing: 52 }
 });
 
-/* ─── DOM refs ───────────────────────────────────────────────────── */
 const SHELL    = document.getElementById('shell');
 const VP       = document.getElementById('viewport');
 const CANVAS   = document.getElementById('canvas');
@@ -878,62 +775,61 @@ const HINT     = document.getElementById('hint');
 const TOOLTIP  = document.getElementById('media-tooltip');
 const TT_INNER = document.getElementById('tt-inner');
 
-/* ─── State ──────────────────────────────────────────────────────── */
 const MIN = 0.07, MAX = 10, STEP = 0.14;
 let scale = 1, ox = 0, oy = 0, shellH = 0;
 
-/* ─── Layout: measure header, position viewport + zoom widget ─────── */
-function layout() {
+/* Resize Observer guarantees layout adjusts immediately upon header collapse */
+const ro = new ResizeObserver(() => {
   shellH = SHELL.offsetHeight;
   VP.style.top    = shellH + 'px';
   VP.style.height = (window.innerHeight - shellH) + 'px';
   ZW.style.top    = shellH + 'px';
-}
+  clamp();
+  commit(false);
+});
+ro.observe(SHELL);
 
-/* ─── Core transform — GPU path only: translate3d + scale ─────────── */
+/* Toggle Header Logic */
+document.getElementById('btn-collapse').addEventListener('click', () => {
+  SHELL.classList.toggle('collapsed');
+});
+
+/* 2D Transform explicitly used to force high-res rasterization on mobile */
 function commit(animated) {
   if (animated) {
     CANVAS.style.transition = 'transform .26s cubic-bezier(.22,.61,.36,1)';
     setTimeout(() => { CANVAS.style.transition = ''; }, 300);
   }
-  /* single CSS property write — triggers compositor, not layout */
-  CANVAS.style.transform = `translate3d(${ox}px,${oy}px,0) scale(${scale})`;
+  CANVAS.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
   ZLABEL.textContent = Math.round(scale * 100) + '%';
 }
 
-/* ─── Fit ────────────────────────────────────────────────────────── */
 function fit() {
   const vw = VP.clientWidth, vh = VP.clientHeight;
   const cw = CANVAS.scrollWidth, ch = CANVAS.scrollHeight;
   if (!cw || !ch) return;
   const p = 40;
   scale = Math.max(MIN, Math.min(MAX, Math.min((vw - p * 2) / cw, (vh - p * 2) / ch, 1)));
-  ox = (vw - cw * scale) / 2;
-  oy = (vh - ch * scale) / 2;
+  ox = (vw - cw * scale) / 2; oy = (vh - ch * scale) / 2;
   commit(true);
 }
 
-/* ─── Zoom around focal point ────────────────────────────────────── */
 function zoomAt(ns, fx, fy) {
   ns = Math.max(MIN, Math.min(MAX, ns));
   const r = ns / scale;
-  ox = fx + (ox - fx) * r;
-  oy = fy + (oy - fy) * r;
+  ox = fx + (ox - fx) * r; oy = fy + (oy - fy) * r;
   scale = ns;
   commit(false);
 }
 
-/* ─── Clamp pan: always keep at least 120px of diagram on screen ─── */
 function clamp() {
   const vw = VP.clientWidth, vh = VP.clientHeight;
   const M  = 120;
-  const cw = CANVAS.scrollWidth * scale;
-  const ch = CANVAS.scrollHeight * scale;
+  const cw = CANVAS.scrollWidth * scale; const ch = CANVAS.scrollHeight * scale;
   ox = Math.min(vw - M, Math.max(-cw + M, ox));
   oy = Math.min(vh - M, Math.max(-ch + M, oy));
 }
 
-/* ─── Wheel ──────────────────────────────────────────────────────── */
 let rafW = null;
 VP.addEventListener('wheel', e => {
   e.preventDefault();
@@ -945,38 +841,31 @@ VP.addEventListener('wheel', e => {
   });
 }, { passive: false });
 
-/* ─── Mouse drag pan ──────────────────────────────────────────────── */
 let dragging = false, dsx, dsy, dox, doy, rafD = null;
-
 VP.addEventListener('mousedown', e => {
   if (e.button !== 0) return;
-  dragging = true;
-  dsx = e.clientX; dsy = e.clientY; dox = ox; doy = oy;
+  dragging = true; dsx = e.clientX; dsy = e.clientY; dox = ox; doy = oy;
   VP.classList.add('grabbing');
 });
 window.addEventListener('mousemove', e => {
   if (!dragging || rafD) return;
   rafD = requestAnimationFrame(() => {
     rafD = null;
-    ox = dox + (e.clientX - dsx);
-    oy = doy + (e.clientY - dsy);
-    /* skip commit() to avoid ZLABEL update on every frame */
-    CANVAS.style.transform = `translate3d(${ox}px,${oy}px,0) scale(${scale})`;
+    ox = dox + (e.clientX - dsx); oy = doy + (e.clientY - dsy);
+    CANVAS.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
   });
 }, { passive: true });
 window.addEventListener('mouseup', () => {
   if (!dragging) return;
-  dragging = false;
-  VP.classList.remove('grabbing');
-  clamp();
-  commit(false);
+  dragging = false; VP.classList.remove('grabbing');
+  clamp(); commit(false);
 });
 
-/* ─── Touch: pinch + pan ─────────────────────────────────────────── */
-let tc = {};                          // live touches keyed by identifier
+/* Touch Logic with Built-in Tap Detection to solve mobile interactions safely */
+let tc = {};
 let pinchD0 = null, pinchS0 = 1, pinchFx = 0, pinchFy = 0;
 let panTx = 0, panTy = 0, panOx = 0, panOy = 0;
-let rafT = null;
+let rafT = null, tapStart = null;
 
 function dist2(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
 function mid2(a, b) {
@@ -985,17 +874,19 @@ function mid2(a, b) {
 }
 
 VP.addEventListener('touchstart', e => {
-  e.preventDefault();
+  e.preventDefault(); // crucial to prevent viewport rubber-banding
   for (const t of e.changedTouches) tc[t.identifier] = { clientX: t.clientX, clientY: t.clientY };
   const ids = Object.keys(tc);
   if (ids.length === 2) {
     const [a, b] = ids.map(id => tc[id]);
     pinchD0 = dist2(a, b); pinchS0 = scale;
     const m = mid2(a, b); pinchFx = m.x; pinchFy = m.y;
-  } else {
+    tapStart = null;
+  } else if (ids.length === 1) {
     const t = tc[ids[0]];
     panTx = t.clientX; panTy = t.clientY; panOx = ox; panOy = oy;
     pinchD0 = null;
+    tapStart = { x: t.clientX, y: t.clientY, time: Date.now() };
   }
 }, { passive: false });
 
@@ -1008,25 +899,52 @@ VP.addEventListener('touchmove', e => {
     const ids = Object.keys(tc);
     if (ids.length === 2 && pinchD0 !== null) {
       const [a, b] = ids.map(id => tc[id]);
-      const d = dist2(a, b);
-      const ns = Math.max(MIN, Math.min(MAX, pinchS0 * d / pinchD0));
+      const ns = Math.max(MIN, Math.min(MAX, pinchS0 * dist2(a, b) / pinchD0));
       const r = ns / scale;
-      ox = pinchFx + (ox - pinchFx) * r;
-      oy = pinchFy + (oy - pinchFy) * r;
+      ox = pinchFx + (ox - pinchFx) * r; oy = pinchFy + (oy - pinchFy) * r;
       scale = ns;
     } else if (ids.length === 1) {
       const t = tc[ids[0]];
-      ox = panOx + (t.clientX - panTx);
-      oy = panOy + (t.clientY - panTy);
+      ox = panOx + (t.clientX - panTx); oy = panOy + (t.clientY - panTy);
+      if (tapStart && Math.hypot(t.clientX - tapStart.x, t.clientY - tapStart.y) > 8) {
+        tapStart = null; 
+        hideTT(); // Cleanly dismiss tooltips when dragging map
+      }
     }
-    CANVAS.style.transform = `translate3d(${ox}px,${oy}px,0) scale(${scale})`;
+    CANVAS.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
     ZLABEL.textContent = Math.round(scale * 100) + '%';
   });
 }, { passive: false });
 
 VP.addEventListener('touchend', e => {
+  const idsBefore = Object.keys(tc);
   for (const t of e.changedTouches) delete tc[t.identifier];
   const ids = Object.keys(tc);
+
+  /* Manual tap detection evaluates interactions blocked by preventDefault */
+  if (tapStart && idsBefore.length === 1 && ids.length === 0) {
+    if ((Date.now() - tapStart.time) < 400) {
+      const t = e.changedTouches[0];
+      
+      // Temporarily hide tooltip so raycast grabs the graphic node beneath
+      const wasVis = TOOLTIP.classList.contains('vis');
+      if (wasVis) TOOLTIP.style.display = 'none';
+      const target = document.elementFromPoint(t.clientX, t.clientY);
+      if (wasVis) TOOLTIP.style.display = '';
+
+      const g = target ? target.closest('g.node') : null;
+      if (g) {
+        const raw = g.id || '';
+        if (raw.startsWith('flowchart-')) {
+          const parts = raw.replace(/^flowchart-/, '').split('-'); parts.pop();
+          const nid = parts.join('_');
+          if (mediaData[nid]) showTT(nid, t.clientX, t.clientY);
+          else hideTT();
+        } else { hideTT(); }
+      } else { hideTT(); }
+    }
+  }
+
   if (ids.length === 1) {
     const t = tc[ids[0]];
     panTx = t.clientX; panTy = t.clientY; panOx = ox; panOy = oy;
@@ -1035,175 +953,113 @@ VP.addEventListener('touchend', e => {
   if (ids.length === 0) { clamp(); commit(false); }
 }, { passive: true });
 
-/* ─── Zoom buttons ───────────────────────────────────────────────── */
-const cx = () => VP.clientWidth  / 2;
-const cy = () => VP.clientHeight / 2;
+/* Button Actions */
+const cx = () => VP.clientWidth  / 2, cy = () => VP.clientHeight / 2;
 document.getElementById('btn-in') .addEventListener('click', () => zoomAt(scale + STEP, cx(), cy()));
 document.getElementById('btn-out').addEventListener('click', () => zoomAt(scale - STEP, cx(), cy()));
 document.getElementById('btn-fit').addEventListener('click', fit);
 
-/* ─── Keyboard shortcuts ─────────────────────────────────────────── */
-window.addEventListener('keydown', e => {
-  if (e.key === '=' || e.key === '+') zoomAt(scale + STEP, cx(), cy());
-  if (e.key === '-' || e.key === '_') zoomAt(scale - STEP, cx(), cy());
-  if (e.key === '0')                  fit();
-}, { passive: true });
+let hideTimer = null, curVid = null, rafTT = null, pendX, pendY;
+let activeNodeId = null;
 
-/* ─── Resize ─────────────────────────────────────────────────────── */
-window.addEventListener('resize', layout, { passive: true });
-
-/* ══════════════════════════════════════════════════════════════════
-   MEDIA TOOLTIP ENGINE
-══════════════════════════════════════════════════════════════════ */
-let hideTimer = null, curVid = null;
-let rafTT = null, pendX, pendY;
+function highlightNode(nid) {
+  document.querySelectorAll('g.node[data-nid]').forEach(g => {
+    const n = g.getAttribute('data-nid');
+    const shape = g.querySelector('rect,polygon,circle,ellipse');
+    const hasM = !!mediaData[n];
+    if (shape) {
+      if (n === nid) shape.style.filter = hasM ? 'drop-shadow(0 0 9px rgba(255,228,82,.72)) brightness(1.18)' : 'brightness(1.14)';
+      else shape.style.filter = hasM ? 'drop-shadow(0 0 5px rgba(255,228,82,.38))' : '';
+    }
+  });
+}
 
 function ttPos(x, y) {
+  if (window.innerWidth <= 768) return; // Desktop only mapping
   const W = window.innerWidth, H = window.innerHeight;
-  const tw = 340, th = 280;
   let lx = x + 18, ly = y - 20;
-  if (lx + tw > W - 8) lx = x - tw - 18;
-  if (ly + th > H - 8) ly = H - th - 8;
-  if (ly < 8) ly = 8;
-  if (lx < 8) lx = 8;
-  TOOLTIP.style.setProperty('--ttx', lx + 'px');
-  TOOLTIP.style.setProperty('--tty', ly + 'px');
+  if (lx + 340 > W - 8) lx = x - 340 - 18;
+  if (ly + 280 > H - 8) ly = H - 280 - 8;
+  TOOLTIP.style.setProperty('--ttx', Math.max(8, lx) + 'px');
+  TOOLTIP.style.setProperty('--tty', Math.max(8, ly) + 'px');
 }
 
 function showTT(nodeId, x, y) {
   clearTimeout(hideTimer);
   TT_INNER.innerHTML = '';
   const m = mediaData[nodeId];
-
   if (!m) {
-    TT_INNER.innerHTML =
-      `<div class="tt-empty">No media attached<br>
-       <span style="font-size:9px;opacity:.35;font-family:'DM Mono',monospace">NODE: ${nodeId}</span></div>`;
+    TT_INNER.innerHTML = `<div class="tt-empty">No media attached<br><span style="font-size:9px;opacity:.35;">NODE: ${nodeId}</span></div>`;
   } else {
-    const idEl = document.createElement('div');
-    idEl.className = 'tt-id';
-    idEl.textContent = nodeId;
-
-    let med;
+    let med = document.createElement(m.type === 'video' ? 'video' : 'img');
+    med.className = 'tt-media'; med.src = m.url;
     if (m.type === 'video') {
-      med = document.createElement('video');
-      med.className = 'tt-media';
-      med.src = m.url;
-      med.autoplay = true; med.muted = true;
-      med.loop = true; med.controls = true; med.playsInline = true;
+      med.autoplay = true; med.muted = true; med.loop = true; med.controls = true; med.playsInline = true;
       curVid = med;
     } else {
-      med = document.createElement('img');
-      med.className = 'tt-media';
-      med.src = m.url; med.alt = m.caption || nodeId;
-      med.decoding = 'async'; med.loading = 'lazy';
+      med.alt = m.caption || nodeId; med.decoding = 'async'; med.loading = 'lazy';
     }
-
     const cap = document.createElement('div');
     cap.className = 'tt-cap';
-    cap.appendChild(idEl);
-    if (m.caption) {
-      const ct = document.createElement('div');
-      ct.textContent = m.caption;
-      cap.appendChild(ct);
-    }
-    TT_INNER.appendChild(med);
-    TT_INNER.appendChild(cap);
+    cap.innerHTML = `<div class="tt-id">${nodeId}</div>${m.caption ? `<div>${m.caption}</div>` : ''}<div class="tt-hint-mobile">Tap empty space to close</div>`;
+    TT_INNER.appendChild(med); TT_INNER.appendChild(cap);
   }
-
   ttPos(x, y);
   TOOLTIP.classList.add('vis');
+  highlightNode(nodeId);
 }
 
 function hideTT() {
   hideTimer = setTimeout(() => {
     TOOLTIP.classList.remove('vis');
     if (curVid) { curVid.pause(); curVid = null; }
-    /* defer DOM clear until after transition */
     setTimeout(() => { TT_INNER.innerHTML = ''; }, 200);
+    highlightNode(null);
   }, 180);
 }
 
 TOOLTIP.addEventListener('mouseenter', () => clearTimeout(hideTimer));
 TOOLTIP.addEventListener('mouseleave', hideTT);
 
-/* RAF-throttled tooltip tracking */
 window.addEventListener('mousemove', e => {
   pendX = e.clientX; pendY = e.clientY;
   if (!TOOLTIP.classList.contains('vis') || rafTT) return;
-  rafTT = requestAnimationFrame(() => {
-    rafTT = null;
-    ttPos(pendX, pendY);
-  });
+  rafTT = requestAnimationFrame(() => { rafTT = null; ttPos(pendX, pendY); });
 }, { passive: true });
 
-/* ══════════════════════════════════════════════════════════════════
-   POST-RENDER: style SVG + wire hover listeners
-══════════════════════════════════════════════════════════════════ */
 function postRender() {
   const svg = document.querySelector('.mermaid svg');
   if (!svg) return;
+  svg.style.background = 'transparent'; svg.style.overflow = 'visible';
 
-  svg.style.background = 'transparent';
-  svg.style.overflow   = 'visible';
+  svg.querySelectorAll('.edgePath path, .flowchart-link').forEach(p => p.style.cssText += 'stroke:#d7d7cf;stroke-width:1.3px;opacity:.52;');
+  svg.querySelectorAll('marker path, marker polygon').forEach(p => p.style.fill = '#c5c5c3');
+  svg.querySelectorAll('.cluster rect').forEach(r => r.style.cssText += 'fill:#161a18;stroke:#272c29;stroke-width:1px;');
+  svg.querySelectorAll('.cluster-label text, .cluster-label span').forEach(l => l.style.cssText += "fill:#8a8880;font-family:'DM Mono',monospace;font-size:11px;");
 
-  /* Edges */
-  svg.querySelectorAll('.edgePath path, .flowchart-link').forEach(p => {
-    p.style.cssText += 'stroke:#d7d7cf;stroke-width:1.3px;opacity:.52;';
-  });
-  /* Arrowheads */
-  svg.querySelectorAll('marker path, marker polygon').forEach(p => {
-    p.style.fill = '#c5c5c3';
-  });
-  /* Subgraph containers */
-  svg.querySelectorAll('.cluster rect').forEach(r => {
-    r.style.cssText += 'fill:#161a18;stroke:#272c29;stroke-width:1px;';
-  });
-  svg.querySelectorAll('.cluster-label text, .cluster-label span').forEach(l => {
-    l.style.cssText += "fill:#8a8880;font-family:'DM Mono',monospace;font-size:11px;";
-  });
-
-  /* Nodes */
   svg.querySelectorAll('g.node').forEach(g => {
     const raw = g.id || '';
     if (!raw.startsWith('flowchart-')) return;
-    const parts = raw.replace(/^flowchart-/, '').split('-');
-    parts.pop();
+    const parts = raw.replace(/^flowchart-/, '').split('-'); parts.pop();
     const nid = parts.join('_');
-
-    g.style.cursor     = 'pointer';
-    g.style.willChange = 'filter';       /* pre-promote, avoids jank on first hover */
+    g.setAttribute('data-nid', nid);
+    g.style.cursor = 'pointer';
 
     const shape = g.querySelector('rect,polygon,circle,ellipse');
-    const hasM  = !!mediaData[nid];
-
+    const hasM = !!mediaData[nid];
     if (hasM && shape) {
-      shape.style.filter     = 'drop-shadow(0 0 5px rgba(255,228,82,.38))';
+      shape.style.filter = 'drop-shadow(0 0 5px rgba(255,228,82,.38))';
       shape.style.strokeWidth = '2px';
     }
-
-    g.addEventListener('mouseenter', e => {
-      showTT(nid, e.clientX, e.clientY);
-      if (shape) shape.style.filter = hasM
-        ? 'drop-shadow(0 0 9px rgba(255,228,82,.72)) brightness(1.18)'
-        : 'brightness(1.14)';
-    });
-    g.addEventListener('mouseleave', () => {
-      hideTT();
-      if (shape) shape.style.filter = hasM
-        ? 'drop-shadow(0 0 5px rgba(255,228,82,.38))' : '';
-    });
+    
+    // Desktop hover handling (mobile touch intercept handles the rest)
+    g.addEventListener('mouseenter', e => showTT(nid, e.clientX, e.clientY));
+    g.addEventListener('mouseleave', () => hideTT());
   });
 
-  /* Initial fit */
   fit();
-
-  /* Dismiss hint */
   setTimeout(() => HINT.classList.add('gone'), 5000);
 }
-
-/* ─── Boot ───────────────────────────────────────────────────────── */
-layout();
 
 const obs = new MutationObserver((_, o) => {
   if (document.querySelector('.mermaid svg')) {
@@ -1212,11 +1068,8 @@ const obs = new MutationObserver((_, o) => {
   }
 });
 obs.observe(document.body, { childList: true, subtree: true });
+setTimeout(() => { if (document.querySelector('.mermaid svg')) postRender(); }, 4000);
 
-/* Hard fallback if observer misses */
-setTimeout(() => {
-  if (document.querySelector('.mermaid svg')) postRender();
-}, 4000);
 </script>
 </body>
 </html>
